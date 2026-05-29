@@ -1,0 +1,38 @@
+# General / IDEs
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.tmp
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Frontend (Node / React / Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Backend (Java / Maven / Spring Boot)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/*.class
+backend/bin/
+backend/tmp/
+backend/*.db
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.factorypath
+backend/dependency-reduced-pom.xml
+backend/build/

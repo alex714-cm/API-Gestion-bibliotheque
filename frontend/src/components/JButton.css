@@ -1,0 +1,35 @@
+/* JButton.css */
+.j-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease; /* Transition dyal l'hover */
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+/* Hover Effect: Kat-n9ass chwiya l'opacité o kat-ziyd l'ombre */
+.j-button:hover {
+    filter: brightness(0.9);
+    transform: translateY(-1px); /* Kay-tla3 chwiya l'fo9 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Active Effect: Mlli kat-cliqui */
+.j-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Loading state: L'bouton kiy-welli ghadi o kiy-ji */
+.j-button-loading {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Icons rotation ila bghitiha f Loader */
+.spinner-border-sm {
+    margin-right: 5px;
+}

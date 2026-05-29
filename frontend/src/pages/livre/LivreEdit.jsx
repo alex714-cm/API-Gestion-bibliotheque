@@ -1,0 +1,344 @@
+import { useEffect, useState, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { apiService } from "../../services/apiService";
+import { ThemeContext } from "../../context/ThemeContext";
+import Loader from "../../components/Loader";
+import Swal from "sweetalert2";
+
+export default function LivreEdit() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { theme } = useContext(ThemeContext);
+    const isDark = theme === "dark";
+
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [catOpen, setCatOpen] = useState(false);
+
+    const [formData, setFormData] = useState({
+        titre: "", prix: "", description: "", imageUrl: "",
+        quantite: 0, auteurId: "", categorieIds: []
+    });
+
+    const [auteurs, setAuteurs] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        setLoading(true);
+        Promise.all([
+            apiService.get(`/api/livres/${id}`),
+            apiService.get(`/api/auteurs`),
+            apiService.get(`/api/categories`)
+        ]).then(([livreRes, auteursRes, categoriesRes]) => {
+            const livre = livreRes.data;
+            const allCats = categoriesRes.data;
+            const selectedIds = allCats
+                .filter(cat => livre.categories && livre.categories.some(c => c === cat.libelle || c.id === cat.id))
+                .map(cat => String(cat.id));
+
+            setFormData({
+                titre: livre.titre || "",
+                prix: livre.prix !== undefined ? livre.prix : "",
+                description: livre.description || "",
+                imageUrl: livre.imageUrl || "",
+                quantite: livre.quantite ?? 0,
+                auteurId: String(livre.auteurId || ""),
+                categorieIds: selectedIds
+            });
+            setAuteurs(auteursRes.data);
+            setCategories(allCats);
+        }).catch(() => {
+            Swal.fire("Erreur", "Impossible de charger ce livre.", "error").then(() => navigate("/admin/livre"));
+        }).finally(() => setLoading(false));
+    }, [id]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+    };
+
+    const handleCategories = (e) => {
+        const value = String(e.target.value);
+        setFormData(prev => ({
+            ...prev,
+            categorieIds: e.target.checked
+                ? [...prev.categorieIds, value]
+                : prev.categorieIds.filter(cid => cid !== value)
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const newErrors = {};
+        if (!formData.titre.trim()) newErrors.titre = "Le titre est obligatoire.";
+        if (!formData.auteurId) newErrors.auteurId = "Sélectionnez un auteur.";
+        if (!formData.prix || isNaN(formData.prix)) newErrors.prix = "Un prix valide est requis.";
+        if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+
+        setSubmitting(true);
+        try {
+            await apiService.put(`/api/livres/${id}`, {
+                ...formData,
+                prix: parseFloat(formData.prix),
+                quantite: parseInt(formData.quantite, 10),
+                auteurId: formData.auteurId ? parseInt(formData.auteurId, 10) : null,
+                categorieIds: formData.categorieIds.map(cid => parseInt(cid, 10))
+            });
+            await Swal.fire({
+                icon: "success",
+                title: "Livre mis à jour !",
+                text: `"${formData.titre}" a bien été modifié.`,
+                confirmButtonColor: "#6366f1",
+                timer: 2200,
+                showConfirmButton: false
+            });
+            navigate("/admin/livre");
+        } catch (err) {
+            Swal.fire("Erreur", err.response?.data?.message || "Erreur lors de la modification.", "error");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) return <Loader />;
+
+    const cardStyle = {
+        background: isDark ? "#1e2533" : "#fff",
+        border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"}`,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+        borderRadius: "20px"
+    };
+
+    const inputBase = (field) => ({
+        background: isDark ? "#2d3748" : "#f8fafc",
+        border: `1px solid ${errors[field] ? "#ef4444" : (isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0")}`,
+        color: isDark ? "#e2e8f0" : "#1a202c",
+        borderRadius: "10px"
+    });
+
+    const addonBase = (field) => ({
+        background: isDark ? "#2d3748" : "#f8fafc",
+        border: `1px solid ${errors[field] ? "#ef4444" : (isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0")}`,
+        borderRight: "none",
+        borderRadius: "10px 0 0 10px"
+    });
+
+    const inputWithAddon = (field) => ({ ...inputBase(field), borderLeft: "none", borderRadius: "0 10px 10px 0" });
+
+    const labelClass = "form-label fw-semibold small text-uppercase mb-2";
+    const labelStyle = { letterSpacing: "0.5px", opacity: 0.6 };
+
+    return (
+        <div className="container py-5 mb-5" style={{ maxWidth: 860 }}>
+            {/* Breadcrumb */}
+            <nav className="mb-4">
+                <ol className="breadcrumb" style={{ fontSize: "0.85rem", opacity: 0.6 }}>
+                    <li className="breadcrumb-item">
+                        <span style={{ cursor: "pointer" }} onClick={() => navigate("/admin/livre")}>
+                            <i className="bi bi-book me-1"></i>Livres
+                        </span>
+                    </li>
+                    <li className="breadcrumb-item active">Modifier — {formData.titre}</li>
+                </ol>
+            </nav>
+
+            <div className="p-4 p-md-5" style={cardStyle}>
+                {/* Header */}
+                <div className="d-flex align-items-center gap-3 mb-5">
+                    <div className="rounded-3 overflow-hidden flex-shrink-0"
+                        style={{ width: 52, height: 72, background: isDark ? "#2d3748" : "#f0f4ff" }}>
+                        {formData.imageUrl
+                            ? <img src={formData.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { e.target.style.display = "none"; }} />
+                            : <div className="h-100 d-flex align-items-center justify-content-center" style={{ opacity: 0.3 }}>
+                                <i className="bi bi-book fs-4"></i>
+                              </div>
+                        }
+                    </div>
+                    <div>
+                        <h2 className="fw-bold mb-0" style={{ letterSpacing: "-0.5px" }}>Modifier le livre</h2>
+                        <p className="mb-0 small" style={{ opacity: 0.5 }}>ID #{id} — <span style={{ color: "#6366f1" }}>{formData.titre}</span></p>
+                    </div>
+                    <span className="badge ms-auto rounded-3 px-3 py-2"
+                        style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", color: isDark ? "#a0aec0" : "#5a6a85", fontSize: "0.8rem", fontWeight: 600 }}>
+                        Stock: {formData.quantite}
+                    </span>
+                </div>
+
+                <form onSubmit={handleSubmit} noValidate>
+                    {/* === SECTION 1 : Informations principales === */}
+                    <p className="fw-bold small mb-3" style={{ color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                        <i className="bi bi-info-circle me-2"></i>Informations générales
+                    </p>
+                    <div className="row g-4 mb-4">
+                        {/* Titre */}
+                        <div className="col-12">
+                            <label className={labelClass} style={labelStyle}>Titre du livre</label>
+                            <div className="input-group">
+                                <span className="input-group-text" style={addonBase("titre")}>
+                                    <i className="bi bi-fonts" style={{ opacity: 0.5 }}></i>
+                                </span>
+                                <input type="text" name="titre" value={formData.titre} onChange={handleChange}
+                                    placeholder="Titre du livre" required
+                                    className={`form-control form-control-lg ${errors.titre ? "is-invalid" : ""}`}
+                                    style={inputWithAddon("titre")} />
+                                {errors.titre && <div className="invalid-feedback">{errors.titre}</div>}
+                            </div>
+                        </div>
+
+                        {/* Auteur */}
+                        <div className="col-md-6">
+                            <label className={labelClass} style={labelStyle}>Auteur</label>
+                            <div className="input-group">
+                                <span className="input-group-text" style={addonBase("auteurId")}>
+                                    <i className="bi bi-person-fill" style={{ opacity: 0.5 }}></i>
+                                </span>
+                                <select name="auteurId" value={formData.auteurId} onChange={handleChange} required
+                                    className={`form-select ${errors.auteurId ? "is-invalid" : ""}`}
+                                    style={inputWithAddon("auteurId")}>
+                                    <option value="">Sélectionner un auteur…</option>
+                                    {auteurs.map(a => (
+                                        <option key={a.id} value={a.id}>{a.prenom} {a.nom}</option>
+                                    ))}
+                                </select>
+                                {errors.auteurId && <div className="invalid-feedback">{errors.auteurId}</div>}
+                            </div>
+                        </div>
+
+                        {/* Prix */}
+                        <div className="col-md-3">
+                            <label className={labelClass} style={labelStyle}>Prix (DH)</label>
+                            <div className="input-group">
+                                <span className="input-group-text" style={addonBase("prix")}>
+                                    <i className="bi bi-currency-exchange" style={{ opacity: 0.5 }}></i>
+                                </span>
+                                <input type="number" name="prix" step="0.01" min="0" value={formData.prix} onChange={handleChange}
+                                    placeholder="0.00"
+                                    className={`form-control ${errors.prix ? "is-invalid" : ""}`}
+                                    style={inputWithAddon("prix")} />
+                                {errors.prix && <div className="invalid-feedback">{errors.prix}</div>}
+                            </div>
+                        </div>
+
+                        {/* Stock */}
+                        <div className="col-md-3">
+                            <label className={labelClass} style={labelStyle}>Stock</label>
+                            <div className="input-group">
+                                <span className="input-group-text" style={addonBase("quantite")}>
+                                    <i className="bi bi-box-seam" style={{ opacity: 0.5 }}></i>
+                                </span>
+                                <input type="number" name="quantite" min="0" value={formData.quantite} onChange={handleChange}
+                                    className="form-control" style={inputWithAddon("quantite")} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)", margin: "2rem 0" }} />
+
+                    {/* === SECTION 2 : Couverture & Catégories === */}
+                    <p className="fw-bold small mb-3" style={{ color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                        <i className="bi bi-image me-2"></i>Couverture & Catégories
+                    </p>
+                    <div className="row g-4 mb-4">
+                        {/* URL Image */}
+                        <div className="col-md-8">
+                            <label className={labelClass} style={labelStyle}>URL de la couverture</label>
+                            <div className="input-group">
+                                <span className="input-group-text" style={addonBase("imageUrl")}>
+                                    <i className="bi bi-link-45deg" style={{ opacity: 0.5 }}></i>
+                                </span>
+                                <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange}
+                                    placeholder="https://..."
+                                    className="form-control" style={inputWithAddon("imageUrl")} />
+                            </div>
+                        </div>
+
+                        {/* Aperçu image */}
+                        <div className="col-md-4 d-flex align-items-end">
+                            <div className="rounded-3 overflow-hidden d-flex align-items-center justify-content-center"
+                                style={{ width: "100%", height: 140, background: isDark ? "#2d3748" : "#f0f4ff", border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}` }}>
+                                {formData.imageUrl ? (
+                                    <img src={formData.imageUrl} alt="Aperçu" style={{ height: "100%", objectFit: "contain" }}
+                                        onError={(e) => { e.target.src = "https://img.icons8.com/color/96/book.png"; }} />
+                                ) : (
+                                    <div className="text-center" style={{ opacity: 0.3 }}>
+                                        <i className="bi bi-image fs-1 d-block"></i>
+                                        <small>Aperçu</small>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Catégories */}
+                        <div className="col-12">
+                            <label className={labelClass} style={labelStyle}>Catégories thématiques</label>
+                            <div className="position-relative">
+                                <button type="button"
+                                    onClick={() => setCatOpen(!catOpen)}
+                                    className="btn w-100 text-start d-flex justify-content-between align-items-center py-2 px-3"
+                                    style={{ ...inputBase("categorieIds"), border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0"}`, borderRadius: "10px" }}>
+                                    <span style={{ opacity: formData.categorieIds.length > 0 ? 1 : 0.4 }}>
+                                        {formData.categorieIds.length > 0
+                                            ? <>{formData.categorieIds.length} catégorie(s) — {categories.filter(c => formData.categorieIds.includes(String(c.id))).map(c => c.libelle).join(", ")}</>
+                                            : "Choisir des catégories…"}
+                                    </span>
+                                    <i className={`bi bi-chevron-${catOpen ? "up" : "down"} small`} style={{ opacity: 0.5 }}></i>
+                                </button>
+
+                                {catOpen && (
+                                    <div className="position-absolute w-100 rounded-3 overflow-hidden mt-1 py-1"
+                                        style={{ background: isDark ? "#1e2533" : "#fff", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0"}`, boxShadow: "0 12px 30px rgba(0,0,0,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 99 }}>
+                                        {categories.map(c => (
+                                            <label key={c.id} className="d-flex align-items-center gap-3 px-4 py-2"
+                                                style={{ cursor: "pointer", transition: "background 0.15s" }}
+                                                onMouseEnter={e => e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.05)" : "rgba(99,102,241,0.06)"}
+                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                                <input type="checkbox" className="form-check-input"
+                                                    value={c.id}
+                                                    checked={formData.categorieIds.includes(String(c.id))}
+                                                    onChange={handleCategories}
+                                                    style={{ accentColor: "#6366f1" }} />
+                                                <span className="fw-medium">{c.libelle}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)", margin: "2rem 0" }} />
+
+                    {/* === SECTION 3 : Description === */}
+                    <p className="fw-bold small mb-3" style={{ color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                        <i className="bi bi-text-paragraph me-2"></i>Description
+                    </p>
+                    <div className="mb-5">
+                        <textarea name="description" rows="4" value={formData.description} onChange={handleChange}
+                            placeholder="Résumé du livre, synopsis…"
+                            className="form-control"
+                            style={{ ...inputBase("description"), resize: "vertical", lineHeight: "1.7" }}>
+                        </textarea>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="d-flex gap-3">
+                        <button type="submit" disabled={submitting}
+                            className="btn fw-bold d-flex align-items-center gap-2 px-5 py-2 rounded-3"
+                            style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", border: "none", boxShadow: "0 4px 14px rgba(99,102,241,0.35)" }}>
+                            {submitting
+                                ? <><span className="spinner-border spinner-border-sm"></span> Mise à jour...</>
+                                : <><i className="bi bi-check-lg"></i> Enregistrer les modifications</>}
+                        </button>
+                        <button type="button" onClick={() => navigate("/admin/livre")}
+                            className="btn d-flex align-items-center gap-2 px-4 py-2 rounded-3 fw-semibold"
+                            style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, color: isDark ? "#e2e8f0" : "#374151" }}>
+                            <i className="bi bi-x-lg"></i> Annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}

@@ -1,0 +1,89 @@
+/* Home.css f dossier components */
+
+/* --- Base Styles --- */
+.home-store-container .book-card {
+    transition: all 0.4s ease;
+    overflow: hidden;
+    border: 1px solid transparent !important;
+}
+
+.home-store-container .book-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* --- Style dyal JButton "Commencer l'aventure" (Hero Section) --- */
+.home-store-container .btn-square {
+    border-radius: 12px !important; /* Machi rectangle, rounded corners */
+    text-transform: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.home-store-container .btn-square:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+/* --- Reveal Button Logic (Acheter) --- */
+.home-store-container .reveal-btn {
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 0.3s ease-in-out !important;
+    background-color: #dc3545 !important; /* Rouge */
+    color: white !important;
+    
+    /* MODIFICATION: Machi rectangle, Pill shape */
+    border-radius: 50px !important; 
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    
+    border: none !important;
+    font-weight: bold;
+}
+
+/* Reveal mlli kiy-koun l'hover 3la la card */
+.home-store-container .book-card:hover .reveal-btn {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.home-store-container .reveal-btn:hover {
+    background-color: #a71d2a !important;
+    transform: scale(1.1) !important; /* Zoom sghir mlli t-hoveri l-bouton */
+    filter: brightness(1.2);
+}
+
+/* ============================================= */
+/* --- Dark Mode Specific Adjustments --- */
+/* ============================================= */
+
+/* 1. Shadows o Borders f Dark Mode */
+.bg-dark .book-card {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: #2c2c2c !important; 
+}
+
+.bg-dark .book-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+    border-color: #dc3545 !important; 
+}
+
+/* 2. Style dyal l'image container f Dark Mode */
+.bg-dark .book-card .text-center {
+    background-color: #3d3d3d !important;
+}
+
+/* 3. Text colors (Description o Auteur) f Dark Mode */
+.bg-dark .text-muted {
+    color: #bbb !important; 
+}
+
+.bg-dark .text-primary {
+    color: #0dcaf0 !important; /* Cyan bach i-ban hsen f-dark */
+}
+
+/* 4. Button f Dark Mode (Eclat/Glow) */
+.bg-dark .reveal-btn {
+    box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);
+}
