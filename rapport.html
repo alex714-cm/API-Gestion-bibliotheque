@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport DevOps - API Gestion Bibliothèque</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+            background-color: #f1f5f9;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Dimensions A4 */
+        .page {
+            background-color: #ffffff;
+            width: 210mm;
+            height: 297mm;
+            margin: 15px auto;
+            padding: 25mm 20mm 25mm 20mm;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            page-break-after: always;
+            break-after: page;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Supprime les marges et ombres lors de l'impression */
+        @media print {
+            body {
+                background-color: #ffffff;
+                margin: 0;
+            }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                width: 210mm;
+                height: 297mm;
+                page-break-after: always;
+                break-after: page;
+            }
+        }
+
+        /* En-tête et Pied de page */
+        .page-header {
+            position: absolute;
+            top: 12mm;
+            left: 20mm;
+            right: 20mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 12mm;
+            left: 20mm;
+            right: 20mm;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+        }
+
+        .page-content {
+            margin-top: 5mm;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Typographie */
+        h1 {
+            font-size: 20pt;
+            color: #0f172a;
+            border-left: 5px solid #0ea5e9;
+            padding-left: 12px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            font-size: 14pt;
+            color: #1e293b;
+            margin-top: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            font-size: 11pt;
+            color: #0284c7;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 10.5pt;
+            line-height: 1.6;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        li {
+            font-size: 10.5pt;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        /* Page de garde */
+        .cover-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            text-align: center;
+            padding: 15mm 0;
+        }
+
+        .cover-header {
+            font-size: 15pt;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .cover-subtitle-univ {
+            font-size: 11pt;
+            color: #64748b;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .cover-body {
+            margin: auto 0;
+        }
+
+        .cover-badge {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 10pt;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.15;
+            margin-bottom: 15px;
+            letter-spacing: -0.03em;
+        }
+
+        .cover-subtitle {
+            font-size: 14pt;
+            color: #475569;
+            font-weight: 400;
+            max-width: 85%;
+            margin: 0 auto 40px auto;
+            line-height: 1.4;
+        }
+
+        .cover-meta-table {
+            width: 70%;
+            margin: 50px auto 0 auto;
+            border-collapse: collapse;
+        }
+
+        .cover-meta-table td {
+            padding: 10px;
+            font-size: 11pt;
+            text-align: left;
+        }
+
+        .cover-meta-table td.label {
+            font-weight: 600;
+            color: #64748b;
+            width: 40%;
+        }
+
+        .cover-meta-table td.value {
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .cover-footer {
+            font-size: 11pt;
+            font-weight: 600;
+            color: #64748b;
+            border-top: 2px solid #cbd5e1;
+            padding-top: 15px;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        /* Table des matières */
+        .toc-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 30px;
+        }
+
+        .toc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 16px;
+            font-size: 11pt;
+        }
+
+        .toc-item-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .toc-item-dots {
+            flex-grow: 1;
+            border-bottom: 1px dotted #cbd5e1;
+            margin: 0 10px;
+            position: relative;
+            top: -4px;
+        }
+
+        .toc-item-page {
+            font-weight: 700;
+            color: #0ea5e9;
+        }
+
+        .toc-sublist {
+            list-style: none;
+            padding-left: 25px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .toc-subitem {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+            font-size: 10pt;
+        }
+
+        .toc-subitem-title {
+            color: #475569;
+            font-weight: 400;
+        }
+
+        /* Tableaux de données */
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        table.data-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 9.5pt;
+            padding: 10px 12px;
+            text-align: left;
+            border: 1px solid #1e293b;
+        }
+
+        table.data-table td {
+            padding: 9px 12px;
+            font-size: 9.5pt;
+            border: 1px solid #e2e8f0;
+        }
+
+        table.data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Code et Terminal */
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 8.5pt;
+            line-height: 1.5;
+            overflow: hidden;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #1e293b;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 9pt;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Blocs d'informations et Callouts */
+        .info-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+        }
+
+        .info-box-title {
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 5px;
+            font-size: 10pt;
+        }
+
+        .info-box p {
+            margin-bottom: 0;
+            font-size: 9.5pt;
+            color: #0c4a6e;
+        }
+
+        /* Schémas en ASCII et CSS */
+        .diagram-container {
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 8.5pt;
+            color: #334155;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        /* Accentuation de texte */
+        .highlight {
+            font-weight: 600;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== PAGE 1 : PAGE DE GARDE ==================== -->
+    <div class="page">
+        <div class="cover-container">
+            <div class="cover-header">
+                Université Ibn Tofail
+                <div class="cover-subtitle-univ">Faculté des Sciences / École Nationale des Sciences Appliquées</div>
+            </div>
+            
+            <div class="cover-body">
+                <div class="cover-badge">Projet Fin de Module</div>
+                <div class="cover-title">API DE GESTION DE BIBLIOTHÈQUE</div>
+                <div class="cover-subtitle">Conception, Conteneurisation Multi-stage et Déploiement Continu de l'Application "LivreMoi"</div>
+                
+                <table class="cover-meta-table">
+                    <tr>
+                        <td class="label">Intitulé du Module :</td>
+                        <td class="value">DevOps</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Réalisé par l'étudiant :</td>
+                        <td class="value">Alae Sassi</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Date de rendu :</td>
+                        <td class="value">Mai 2026</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="cover-footer">
+                Année Universitaire : 2025 / 2026
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 2 : TABLE DES MATIÈRES ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>Table des Matières</span>
+        </div>
+        <div class="page-content">
+            <h1>Table des Matières</h1>
+            
+            <ul class="toc-list">
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">1. Introduction et Contexte du Projet</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">3</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">2. Architecture Globale et Choix Techniques</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">4</span>
+                    </div>
+                    <ul class="toc-sublist">
+                        <li>
+                            <div class="toc-subitem">
+                                <span class="toc-subitem-title">2.1 Architecture Logique N-Tier</span>
+                                <span class="toc-subitem-dots"></span>
+                                <span class="toc-subitem-page">4</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="toc-subitem">
+                                <span class="toc-subitem-title">2.2 Justifications des Choix Technologiques</span>
+                                <span class="toc-subitem-dots"></span>
+                                <span class="toc-subitem-page">4</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">3. Structure du Code et Modèle de Données</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">5</span>
+                    </div>
+                    <ul class="toc-sublist">
+                        <li>
+                            <div class="toc-subitem">
+                                <span class="toc-subitem-title">3.1 Organisation des Packages et Modules</span>
+                                <span class="toc-subitem-dots"></span>
+                                <span class="toc-subitem-page">5</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="toc-subitem">
+                                <span class="toc-subitem-title">3.2 Modèle Physique de Données (Oracle Database)</span>
+                                <span class="toc-subitem-dots"></span>
+                                <span class="toc-subitem-page">5</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">4. Fonctionnalités Applicatives Clés</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">6</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">5. Stratégie Git et Cycle de Vie DevOps</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">7</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">6. Conteneurisation Multi-stage de l'Application</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">8</span>
+                    </div>
+                    <ul class="toc-sublist">
+                        <li>
+                            <div class="toc-subitem">
+                                <span class="toc-subitem-title">6.1 Conception du Dockerfile Backend</span>
+                                <span class="toc-subitem-dots"></span>
+                                <span class="toc-subitem-page">8</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="toc-subitem">
+                                <span class="toc-subitem-title">6.2 Conception du Dockerfile Frontend</span>
+                                <span class="toc-subitem-dots"></span>
+                                <span class="toc-subitem-page">8</span>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">7. Orchestration Globale et Reverse Proxy</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">9</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">8. Conclusion et Perspectives</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">10</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="toc-item">
+                        <span class="toc-item-title">9. Annexes</span>
+                        <span class="toc-item-dots"></span>
+                        <span class="toc-item-page">11</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 2 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 3 : INTRODUCTION ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>1. Introduction et Contexte</span>
+        </div>
+        <div class="page-content">
+            <h1>1. Introduction et Contexte du Projet</h1>
+            <p>
+                Dans l'environnement académique et institutionnel moderne, la gestion efficace des ressources documentaires représente un pilier central pour la transmission du savoir. L'application <span class="highlight">"LivreMoi"</span> a été conçue pour surmonter les limitations des anciens systèmes de gestion de bibliothèque, souvent caractérisés par des architectures monolithiques et des interfaces utilisateur rigides.
+            </p>
+            <p>
+                L'objectif principal de ce projet est de réaliser une refonte technologique complète en concevant une application web moderne reposant sur une <span class="highlight">architecture découplée</span>. Le but n'est pas seulement de fournir une API fonctionnelle, mais de mettre en œuvre une démarche DevOps rigoureuse afin d'optimiser le cycle de développement, de garantir la portabilité des environnements et de fiabiliser les phases de déploiement en production.
+            </p>
+            <p>
+                Dans le cadre de ce module DevOps à l'Université Ibn Tofail, ce projet se focalise sur plusieurs axes méthodologiques et techniques :
+            </p>
+            <ul>
+                <li><span class="highlight">Modularité Applicative</span> : Séparation stricte de la logique métier (Backend API REST) et de la couche de présentation (Frontend SPA).</li>
+                <li><span class="highlight">Isolation et Portabilité</span> : Emploi de conteneurs Docker pour garantir que le système s'exécute à l'identique sur n'importe quelle machine hôte ("It works on my machine" resolution).</li>
+                <li><span class="highlight">Optimisation des Builds</span> : Utilisation de builds multi-stage pour minimiser la surface d'attaque et l'empreinte mémoire des conteneurs applicatifs.</li>
+                <li><span class="highlight">Persistance Enterprise Conservée</span> : Liaison directe avec l'instance Oracle Database physique du client afin de préserver l'ensemble des données d'utilisateurs et administrateurs existantes.</li>
+            </ul>
+            <div class="info-box">
+                <div class="info-box-title">Objectifs Clés DevOps</div>
+                <p>
+                    L'application doit être instantanément fonctionnelle en local via une seule commande : <code>docker compose up</code>, tout en s'intégrant sans conflit à la base de données Oracle XE installée sur le système hôte via les adresses réseaux logiques de Docker.
+                </p>
+            </div>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 3 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 4 : ARCHITECTURE ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>2. Architecture Globale</span>
+        </div>
+        <div class="page-content">
+            <h1>2. Architecture Globale et Choix Techniques</h1>
+            <h2>2.1 Architecture Logique N-Tier</h2>
+            <p>
+                L'architecture de l'application LivreMoi adopte un paradigme découplé, séparant les responsabilités à travers un modèle à trois couches (3-Tier) :
+            </p>
+            
+            <div class="diagram-container">
+[ Navigateur Web (Client React) ] --(Port 80/HTTP)--> [ Reverse Proxy Nginx ]
+                                                              |
+                                                      (Proxy Pass /api)
+                                                              |
+                                                              v
+ [ Base Oracle Physique Hôte ] <--(Port 1521)-- [ API REST Spring Boot (8080) ]
+                                            (via host.docker.internal)
+            </div>
+            
+            <p>
+                Le frontend et le backend sont logés dans leurs conteneurs Docker respectifs, tandis que la base de données Oracle XE tourne nativement sur l'OS hôte du client. Le conteneur backend s'y connecte de manière transparente grâce au pont réseau virtuel de Docker (<code>host.docker.internal</code>).
+            </p>
+
+            <h2>2.2 Justifications des Choix Technologiques</h2>
+            <ul>
+                <li>
+                    <span class="highlight">Backend (Spring Boot 3.x / Java 17)</span> : Ce framework a été retenu pour sa maturité, sa robustesse dans le traitement transactionnel, sa sécurité native et sa couche d'abstraction ORM (Spring Data JPA / Hibernate) qui simplifie le dialogue avec des bases relationnelles d'envergure.
+                </li>
+                <li>
+                    <span class="highlight">Frontend (React 19 / Vite)</span> : React permet de bâtir une SPA (Single Page Application) réactive, offrant une expérience utilisateur fluide. Vite a été choisi comme outil de build pour sa vitesse d'exécution lors du développement et sa capacité à générer un build de production statique hautement optimisé.
+                </li>
+                <li>
+                    <span class="highlight">Base de Données Oracle XE Locale</span> : Le choix de maintenir l'accès à la base de données locale installée sur Windows garantit l'intégrité et la persistance des données historiques (comptes utilisateurs, administrateurs et historique des emprunts déjà configurés).
+                </li>
+            </ul>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 4 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 5 : CODE ET MODÈLE DE DONNÉES ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>3. Structure et Données</span>
+        </div>
+        <div class="page-content">
+            <h1>3. Structure du Code et Modèle de Données</h1>
+            <h2>3.1 Organisation des Packages et Modules</h2>
+            <p>
+                Le code source du backend est structuré selon les conventions Spring Boot pour séparer les concepts (Séparation des préoccupations) :
+            </p>
+            <ul>
+                <li><code>com.bibliotheque.entities</code> : Contient les classes de modèle persistantes mappées par Hibernate.</li>
+                <li><code>com.bibliotheque.repositories</code> : Fournit les interfaces étendant <code>JpaRepository</code> pour les opérations CRUD sur Oracle.</li>
+                <li><code>com.bibliotheque.service</code> : Implémente la logique métier (gestion des stocks lors des emprunts, vérification des retards).</li>
+                <li><code>com.bibliotheque.controller</code> : Définit les points d'entrée de l'API REST HTTP (gestion CORS intégrée).</li>
+                <li><code>com.bibliotheque.dto</code> : Gère la structure des données reçues et renvoyées (Data Transfer Objects).</li>
+            </ul>
+
+            <h2>3.2 Modèle Physique de Données (Oracle Database)</h2>
+            <p>
+                Le schéma relationnel est structuré autour de 5 tables clés. Pour assurer la compatibilité avec Oracle Database (notamment le respect de l'auto-incrémentation via séquences), nous utilisons des générateurs de séquence Hibernate configurés pour interagir directement avec les objets Oracle correspondants.
+            </p>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Clé Primaire</th>
+                        <th>Relations Clés</th>
+                        <th>Séquence Oracle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="highlight">USERS</span></td>
+                        <td>id (RAW/NUMBER)</td>
+                        <td>Aucune direct</td>
+                        <td>USER_SEQ</td>
+                    </tr>
+                    <tr>
+                        <td><span class="highlight">AUTEUR</span></td>
+                        <td>id (RAW/NUMBER)</td>
+                        <td>1-N vers Livre</td>
+                        <td>ETUDIANT_SEQ</td>
+                    </tr>
+                    <tr>
+                        <td><span class="highlight">CATEGORIE</span></td>
+                        <td>id (RAW/NUMBER)</td>
+                        <td>N-N avec Livre</td>
+                        <td>ETUDIANT_SEQ</td>
+                    </tr>
+                    <tr>
+                        <td><span class="highlight">LIVRE</span></td>
+                        <td>id (RAW/NUMBER)</td>
+                        <td>N-1 Auteur</td>
+                        <td>LIVRE_SEQ</td>
+                    </tr>
+                    <tr>
+                        <td><span class="highlight">EMPRUNTS</span></td>
+                        <td>id (RAW/NUMBER)</td>
+                        <td>N-1 User, N-1 Livre</td>
+                        <td>EMPRUNT_SEQ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 5 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 6 : FONCTIONNALITÉS APPLICATIVES ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>4. Fonctionnalités Applicatives</span>
+        </div>
+        <div class="page-content">
+            <h1>4. Fonctionnalités Applicatives Clés</h1>
+            <p>
+                L'application LivreMoi propose des fonctionnalités distinctes pour deux rôles principaux : les utilisateurs (lecteurs) et l'administrateur.
+            </p>
+            
+            <h3>1. Authentification & Gestion des Droits</h3>
+            <p>
+                Un système de login et registre complet avec mot de passe masqué/visible. Un <code>AuthContext</code> React conserve le jeton utilisateur et son rôle, verrouillant l'accès aux pages selon les autorisations (ADMIN / USER). Les mots de passe sont encodés via <code>BCryptPasswordEncoder</code> dans le backend Spring Boot.
+            </p>
+
+            <h3>2. Espace Lecteur (Catalogue & Emprunts)</h3>
+            <p>
+                L'utilisateur dispose d'un tableau de bord personnel répertoriant ses emprunts en cours sous forme de liste paginée. Il peut naviguer dans le catalogue général, filtrer les livres par catégorie et effectuer un emprunt immédiat. Le système intègre <strong>SweetAlert2</strong> pour l'affichage de notifications dynamiques et de modales interactives de confirmation d'action.
+            </p>
+
+            <h3>3. Espace Administration & Gestion des Stocks</h3>
+            <p>
+                L'administrateur a le contrôle complet sur le catalogue physique :
+            </p>
+            <ul>
+                <li><span class="highlight">Gestion du stock</span> : Toute action d'emprunt décrémente de manière atomique la quantité en stock dans la base Oracle. Réciproquement, un retour ou une annulation incrémente le stock.</li>
+                <li><span class="highlight">Interface Admin dédiée</span> : Un volet d'administration permet de créer des livres, modifier leurs fiches, attribuer des catégories et valider le retour physique d'un livre emprunté.</li>
+                <li><span class="highlight">Annulation de commande</span> : Les utilisateurs peuvent annuler un emprunt non validé, ce qui réajuste immédiatement le stock de livres.</li>
+            </ul>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 6 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 7 : STRATÉGIE GIT ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>5. Stratégie Git</span>
+        </div>
+        <div class="page-content">
+            <h1>5. Stratégie Git et Cycle de Vie DevOps</h1>
+            <p>
+                Une bonne gestion de versions est indispensable à la mise en œuvre de la démarche DevOps. Pour LivreMoi, Git a été utilisé de façon rigoureuse à travers un modèle de branches rationalisé afin de structurer les développements.
+            </p>
+            
+            <div class="diagram-container" style="text-align: left; padding-left: 30px;">
+main      (Production)  ========================== [v1.0.0] (Tag)
+                           ^                 /
+                           | (Merge request / Pull)
+                           |               v
+develop   (Intégration) =========================================
+                           ^             ^
+                           | (Merge)     | (Branch & Merge)
+                           |             |
+feature/  (Fonctionnalité) +--[cors-fix]--+--[nginx-proxy]--
+            </div>
+
+            <h2>5.1 Modèle de Branches adopté</h2>
+            <ul>
+                <li>
+                    <span class="highlight">main</span> : Cette branche est sacrée. Elle ne contient que le code entièrement stable, testé et validé. C'est à partir de cette branche que sont tirées les images Docker destinées à être publiées sur le registre Docker Hub de production (<code>3alae008/api-gestion-bibliotheque-*</code>).
+                </li>
+                <li>
+                    <span class="highlight">feature/ (branches thématiques)</span> : Pour chaque fonctionnalité ou correctif (par exemple, la correction des importations sensibles à la casse pour Linux, ou la mise en place de la configuration CORS), une branche dédiée est créée à partir de <code>main</code> (ou de la branche de développement) puis fusionnée après validation.
+                </li>
+            </ul>
+
+            <h2>5.2 Politique de commits et conventions</h2>
+            <p>
+                Les messages de commits adoptent le format standardisé <code>Conventional Commits</code> (ex. : <code>feat: configurer la securite cors pour nginx</code>, <code>fix: corriger la casse de home.css pour le conteneur linux</code>). Cela facilite la génération automatique de changelogs et assure un historique clair pour l'équipe DevOps.
+            </p>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 7 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 8 : CONTENEURISATION 1 ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>6. Conteneurisation - Dockerfiles</span>
+        </div>
+        <div class="page-content">
+            <h1>6. Conteneurisation Multi-stage de l'Application</h1>
+            <p>
+                Pour distribuer l'application de manière portable et performante, nous avons configuré des builds Docker basés sur le concept du <span class="highlight">Multi-stage build</span>. Cette approche consiste à séparer l'environnement de compilation (lourd, contenant les outils de build) de l'environnement d'exécution (minimal, ne contenant que le strict nécessaire pour exécuter l'application).
+            </p>
+
+            <h2>6.1 Conception du Dockerfile Backend</h2>
+            <p>
+                Le Dockerfile du backend utilise deux étapes distinctes :
+            </p>
+            <ul>
+                <li>
+                    <span class="highlight">Étape 1 (Build)</span> : Basée sur l'image <code>maven:3.9.6-eclipse-temurin-17</code>. Cette étape récupère le code source, télécharge les dépendances définies dans <code>pom.xml</code> (mises en cache dans une couche intermédiaire pour accélérer les builds ultérieurs), puis compile l'application sous forme de fichier JAR exécutable.
+                </li>
+                <li>
+                    <span class="highlight">Étape 2 (Runtime)</span> : Basée sur l'image ultra-légère <code>eclipse-temurin:17-jre-alpine</code>. Seul le fichier JAR produit à l'étape 1 y est copié. Le compilateur Maven, le JDK complet et le code source original sont ainsi exclus du conteneur final.
+                </li>
+            </ul>
+            <p>
+                <strong>Avantages :</strong> La taille de l'image passe de près de 800 Mo à environ 180 Mo, réduisant la surface d'attaque de sécurité en éliminant les utilitaires inutiles en production.
+            </p>
+
+            <h2>6.2 Conception du Dockerfile Frontend</h2>
+            <p>
+                Pour l'application React/Vite, la même logique multi-stage est appliquée :
+            </p>
+            <ul>
+                <li>
+                    <span class="highlight">Étape 1 (Build)</span> : Basée sur <code>node:20-alpine</code>. Les dépendances npm sont installées via <code>npm ci</code>, et Vite compile l'application pour générer des fichiers statiques optimisés (HTML, JS, CSS) dans le dossier <code>/dist</code>.
+                </li>
+                <li>
+                    <span class="highlight">Étape 2 (Serveur Web)</span> : Basée sur <code>nginx:alpine</code>. Les fichiers statiques y sont copiés. Nginx est configuré pour servir le frontend et agir comme reverse proxy.
+                </li>
+            </ul>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 8 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 9 : ORCHESTRATION ET PROXY ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>7. Orchestration et Proxy</span>
+        </div>
+        <div class="page-content">
+            <h1>7. Orchestration Globale et Reverse Proxy</h1>
+            <h2>7.1 Le Rôle de Nginx en Reverse Proxy</h2>
+            <p>
+                Pour éviter d'exposer directement le serveur d'application Spring Boot sur Internet et pour résoudre de manière définitive les blocages liés aux règles CORS du navigateur, un reverse proxy Nginx est configuré dans le conteneur du frontend.
+            </p>
+            <p>
+                Toutes les requêtes envoyées vers <code>http://localhost/</code> (port 80 par défaut) sont capturées par Nginx. Les requêtes pour l'interface statique sont servies directement. En revanche, les requêtes dirigées vers <code>/api</code> sont redirigées en arrière-plan vers le conteneur du backend à l'adresse <code>http://backend:8080</code>.
+            </p>
+
+            <h2>7.2 Orchestration avec Docker Compose</h2>
+            <p>
+                Le fichier <code>docker-compose.yml</code> coordonne l'infrastructure de production de manière simplifiée et sécurisée en instanciant deux services interconnectés :
+            </p>
+            <ol>
+                <li>
+                    <span class="highlight">backend</span> : Compile et lance l'API Spring Boot. Il intègre des variables d'environnement pointant vers la base Oracle locale physique via l'adresse logique <code>host.docker.internal</code>. Le paramètre <code>extra_hosts</code> assure la résolution DNS de cette adresse sous Linux WSL2.
+                </li>
+                <li>
+                    <span class="highlight">frontend</span> : Distribue l'application React et expose le port 80 à l'utilisateur. Nginx s'y charge de l'acheminement des requêtes.
+                </li>
+            </ol>
+            <div class="info-box">
+                <div class="info-box-title">Avantage de la connexion hybride</div>
+                <p>
+                    En connectant le conteneur backend directement à la base Oracle hôte, nous n'avons pas besoin d'exécuter un conteneur Oracle XE volumineux en local, ce qui économise de la mémoire RAM et CPU sur la machine de développement tout en conservant les données d'administration d'origine.
+                </p>
+            </div>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 9 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 10 : CONCLUSION ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>8. Conclusion et Perspectives</span>
+        </div>
+        <div class="page-content">
+            <h1>8. Conclusion et Perspectives</h1>
+            <p>
+                Le projet <span class="highlight">"LivreMoi"</span> a permis de mettre en place une solution web moderne, robuste et industrialisée de gestion de bibliothèque, combinant la puissance de Spring Boot, la réactivité de React et la fiabilité d'Oracle Database.
+            </p>
+            <p>
+                Sur le plan DevOps, la conteneurisation intégrale de l'application et de son système de persistance avec Docker et Docker Compose répond aux standards modernes de portabilité et de reproductibilité. Les problématiques récurrentes en développement web, telles que la gestion des CORS et la configuration fine des environnements de base de données, ont été adressées de manière transparente à l'aide de configurations reverse proxy Nginx et de variables d'environnement.
+            </p>
+            <p>
+                De plus, les images optimisées produites par les builds multi-stage ont été publiées avec succès sur le registre public Docker Hub (sous le compte <code>3alae008</code>), rendant le déploiement en production accessible en une seule commande depuis n'importe quel serveur distant.
+            </p>
+
+            <h2>Perspectives d'Évolutions DevOps</h2>
+            <p>
+                Pour poursuivre cette dynamique DevOps, plusieurs axes d'améliorations peuvent être envisagés :
+            </p>
+            <ul>
+                <li>
+                    <span class="highlight">Pipeline CI/CD complète</span> : Intégration de GitHub Actions ou GitLab CI pour exécuter automatiquement les tests unitaires et d'intégration à chaque commit, puis builder et pousser automatiquement les nouvelles images étiquetées sur Docker Hub.
+                </li>
+                <li>
+                    <span class="highlight">Monitoring applicatif</span> : Intégration de Spring Boot Actuator avec Prometheus et Grafana pour collecter et visualiser des métriques système (utilisation CPU, mémoire, temps de réponse des requêtes) et anticiper les pannes.
+                </li>
+                <li>
+                    <span class="highlight">Orchestration de production</span> : Migration de la configuration Docker Compose vers un cluster Kubernetes (K8s) pour gérer la haute disponibilité de l'application et sa mise à l'échelle automatique (autoscaling).
+                </li>
+            </ul>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 10 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 11 : ANNEXES 1 ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>9. Annexes - Extraits de Code (1/2)</span>
+        </div>
+        <div class="page-content">
+            <h1>9. Annexes - Extraits de Code (1/2)</h1>
+            <h3>Fichier docker-compose.yml de l'application (Connexion à la base hôte)</h3>
+            <pre><code>version: '3.8'
+
+services:
+  # Backend Service: Spring Boot Application connecté à l'instance Oracle locale de l'hôte
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: library-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Connexion à l'instance Oracle locale (hôte Windows) via host.docker.internal
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@host.docker.internal:1521:xe
+      - SPRING_DATASOURCE_USERNAME=library
+      - SPRING_DATASOURCE_PASSWORD=sys
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
+  # Frontend Service: React App + Nginx Reverse Proxy
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: library-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always</code></pre>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 11 sur 12</span>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 12 : ANNEXES 2 ==================== -->
+    <div class="page">
+        <div class="page-header">
+            <span>Rapport DevOps - API Gestion Bibliothèque</span>
+            <span>9. Annexes - Extraits de Code (2/2)</span>
+        </div>
+        <div class="page-content">
+            <h1>9. Annexes - Extraits de Code (2/2)</h1>
+            <h3>Configuration Reverse Proxy Nginx (frontend/nginx.conf)</h3>
+            <pre><code>server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API requests to the backend service
+    location /api {
+        proxy_pass http://backend:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}</code></pre>
+            
+            <h3>Références bibliographiques</h3>
+            <ul>
+                <li>Documentation officielle de Docker et Docker Compose : <a href="https://docs.docker.com" target="_blank">https://docs.docker.com</a></li>
+                <li>Guide de démarrage rapide de Spring Boot et JPA : <a href="https://spring.io/projects/spring-boot" target="_blank">https://spring.io/projects/spring-boot</a></li>
+                <li>Documentation de React 19 et Vite.js : <a href="https://vite.dev" target="_blank">https://vite.dev</a></li>
+                <li>Résolution DNS Docker pour hôte WSL2 : <a href="https://docs.docker.com/desktop/networking/" target="_blank">https://docs.docker.com/desktop/networking/</a></li>
+            </ul>
+        </div>
+        <div class="page-footer">
+            <span>Université Ibn Tofail - DevOps 2025/2026</span>
+            <span>Page 12 sur 12</span>
+        </div>
+    </div>
+
+</body>
+</html>

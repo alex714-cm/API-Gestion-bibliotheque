@@ -14,7 +14,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/emprunts")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin("*")
 public class EmpruntController {
 
     @Autowired

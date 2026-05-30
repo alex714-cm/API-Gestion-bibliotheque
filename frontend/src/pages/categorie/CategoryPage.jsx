@@ -4,7 +4,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { apiService } from "../../services/apiService";
 import { useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
-import "../../components/Home.css";
+import "../../components/home.css";
 
 export function CategoryPage({ categoryName, categoryDisplayName, categoryIcon, categoryThemeColor }) {
     const { theme } = useContext(ThemeContext);
