@@ -576,12 +576,12 @@
                 <li><span class="highlight">Modularité Applicative</span> : Séparation stricte de la logique métier (Backend API REST) et de la couche de présentation (Frontend SPA).</li>
                 <li><span class="highlight">Isolation et Portabilité</span> : Emploi de conteneurs Docker pour garantir que le système s'exécute à l'identique sur n'importe quelle machine hôte ("It works on my machine" resolution).</li>
                 <li><span class="highlight">Optimisation des Builds</span> : Utilisation de builds multi-stage pour minimiser la surface d'attaque et l'empreinte mémoire des conteneurs applicatifs.</li>
-                <li><span class="highlight">Persistance Enterprise Conservée</span> : Liaison directe avec l'instance Oracle Database physique du client afin de préserver l'ensemble des données d'utilisateurs et administrateurs existantes.</li>
+                <li><span class="highlight">Persistance Enterprise</span> : Exploitation d'un moteur de base de données relationnelle d'entreprise (Oracle Database) avec des conteneurs optimisés.</li>
             </ul>
             <div class="info-box">
                 <div class="info-box-title">Objectifs Clés DevOps</div>
                 <p>
-                    L'application doit être instantanément fonctionnelle en local via une seule commande : <code>docker compose up</code>, tout en s'intégrant sans conflit à la base de données Oracle XE installée sur le système hôte via les adresses réseaux logiques de Docker.
+                    L'application doit être instantanément fonctionnelle en local via une seule commande : <code>docker compose up</code>, tout en intégrant des configurations adaptées à la mise en production (CORS dynamiques, reverse proxy Nginx, et build Docker avec base Oracle XE conteneurisée).
                 </p>
             </div>
         </div>
@@ -610,12 +610,11 @@
                                                       (Proxy Pass /api)
                                                               |
                                                               v
- [ Base Oracle Physique Hôte ] <--(Port 1521)-- [ API REST Spring Boot (8080) ]
-                                            (via host.docker.internal)
+ [ Base de Données Oracle XE ] <--(Port 1521)-- [ API REST Spring Boot (8080) ]
             </div>
             
             <p>
-                Le frontend et le backend sont logés dans leurs conteneurs Docker respectifs, tandis que la base de données Oracle XE tourne nativement sur l'OS hôte du client. Le conteneur backend s'y connecte de manière transparente grâce au pont réseau virtuel de Docker (<code>host.docker.internal</code>).
+                Chaque couche est logée dans son propre conteneur Docker isolé, communiquant à travers un réseau virtuel sécurisé géré par Docker Compose. Cette architecture élimine les dépendances locales de l'OS hôte.
             </p>
 
             <h2>2.2 Justifications des Choix Technologiques</h2>
@@ -627,7 +626,7 @@
                     <span class="highlight">Frontend (React 19 / Vite)</span> : React permet de bâtir une SPA (Single Page Application) réactive, offrant une expérience utilisateur fluide. Vite a été choisi comme outil de build pour sa vitesse d'exécution lors du développement et sa capacité à générer un build de production statique hautement optimisé.
                 </li>
                 <li>
-                    <span class="highlight">Base de Données Oracle XE Locale</span> : Le choix de maintenir l'accès à la base de données locale installée sur Windows garantit l'intégrité et la persistance des données historiques (comptes utilisateurs, administrateurs et historique des emprunts déjà configurés).
+                    <span class="highlight">Base de Données (Oracle XE)</span> : Oracle Database est un standard industriel reconnu pour sa fiabilité transactionnelle (conformité ACID), sa gestion avancée des verrous concurrentiels et l'utilisation optimale de séquences d'identifiants uniques pour les entités JPA.
                 </li>
             </ul>
         </div>
@@ -859,20 +858,23 @@ feature/  (Fonctionnalité) +--[cors-fix]--+--[nginx-proxy]--
 
             <h2>7.2 Orchestration avec Docker Compose</h2>
             <p>
-                Le fichier <code>docker-compose.yml</code> coordonne l'infrastructure de production de manière simplifiée et sécurisée en instanciant deux services interconnectés :
+                Le fichier <code>docker-compose.yml</code> coordonne l'infrastructure. Il instancie trois services interconnectés sur un réseau privé :
             </p>
             <ol>
                 <li>
-                    <span class="highlight">backend</span> : Compile et lance l'API Spring Boot. Il intègre des variables d'environnement pointant vers la base Oracle locale physique via l'adresse logique <code>host.docker.internal</code>. Le paramètre <code>extra_hosts</code> assure la résolution DNS de cette adresse sous Linux WSL2.
+                    <span class="highlight">database</span> : Exécute l'image légère <code>gvenzl/oracle-xe:21-slim-faststart</code>. Il utilise un volume nommé <code>oracle-data</code> pour garantir la persistance des données. Un script d'initialisation personnalisé <code>init-data.sql</code> permet d'insérer des données de démonstration de manière sécurisée si la base est vide.
                 </li>
                 <li>
-                    <span class="highlight">frontend</span> : Distribue l'application React et expose le port 80 à l'utilisateur. Nginx s'y charge de l'acheminement des requêtes.
+                    <span class="highlight">backend</span> : Compile et lance l'API Spring Boot. Son démarrage est suspendu jusqu'à ce que la base de données soit déclarée saine grâce à la directive <code>healthcheck</code> de Docker Compose.
+                </li>
+                <li>
+                    <span class="highlight">frontend</span> : Distribue l'application React et expose le port 80 à l'utilisateur.
                 </li>
             </ol>
             <div class="info-box">
-                <div class="info-box-title">Avantage de la connexion hybride</div>
+                <div class="info-box-title">Isolation Réseau</div>
                 <p>
-                    En connectant le conteneur backend directement à la base Oracle hôte, nous n'avons pas besoin d'exécuter un conteneur Oracle XE volumineux en local, ce qui économise de la mémoire RAM et CPU sur la machine de développement tout en conservant les données d'administration d'origine.
+                    Seul le conteneur frontend expose le port 80 à l'extérieur. Le backend et la base de données ne sont pas accessibles publiquement, ce qui garantit la sécurité de la stack.
                 </p>
             </div>
         </div>
@@ -930,11 +932,29 @@ feature/  (Fonctionnalité) +--[cors-fix]--+--[nginx-proxy]--
         </div>
         <div class="page-content">
             <h1>9. Annexes - Extraits de Code (1/2)</h1>
-            <h3>Fichier docker-compose.yml de l'application (Connexion à la base hôte)</h3>
+            <h3>Fichier docker-compose.yml de l'application</h3>
             <pre><code>version: '3.8'
 
 services:
-  # Backend Service: Spring Boot Application connecté à l'instance Oracle locale de l'hôte
+  database:
+    image: gvenzl/oracle-xe:21-slim-faststart
+    container_name: library-database
+    ports:
+      - "1522:1521"
+    environment:
+      - ORACLE_PASSWORD=sys
+      - APP_USER=library
+      - APP_USER_PASSWORD=sys
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    restart: always
+
   backend:
     build:
       context: ./backend
@@ -943,16 +963,15 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Connexion à l'instance Oracle locale (hôte Windows) via host.docker.internal
-      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@host.docker.internal:1521:xe
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@database:1521/XEPDB1
       - SPRING_DATASOURCE_USERNAME=library
       - SPRING_DATASOURCE_PASSWORD=sys
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      database:
+        condition: service_healthy
     restart: always
 
-  # Frontend Service: React App + Nginx Reverse Proxy
   frontend:
     build:
       context: ./frontend
@@ -962,7 +981,10 @@ services:
       - "80:80"
     depends_on:
       - backend
-    restart: always</code></pre>
+    restart: always
+
+volumes:
+  oracle-data:</code></pre>
         </div>
         <div class="page-footer">
             <span>Université Ibn Tofail - DevOps 2025/2026</span>
@@ -1009,7 +1031,7 @@ services:
                 <li>Documentation officielle de Docker et Docker Compose : <a href="https://docs.docker.com" target="_blank">https://docs.docker.com</a></li>
                 <li>Guide de démarrage rapide de Spring Boot et JPA : <a href="https://spring.io/projects/spring-boot" target="_blank">https://spring.io/projects/spring-boot</a></li>
                 <li>Documentation de React 19 et Vite.js : <a href="https://vite.dev" target="_blank">https://vite.dev</a></li>
-                <li>Résolution DNS Docker pour hôte WSL2 : <a href="https://docs.docker.com/desktop/networking/" target="_blank">https://docs.docker.com/desktop/networking/</a></li>
+                <li>Image Docker officielle Oracle XE par Gerald Venzl : <a href="https://github.com/gvenzl/docker-oracle-xe" target="_blank">https://github.com/gvenzl/docker-oracle-xe</a></li>
             </ul>
         </div>
         <div class="page-footer">
