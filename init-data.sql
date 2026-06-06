@@ -138,4 +138,15 @@ VALUES (
     'ADMIN'
 );
 
+-- Compte User par défaut (mot de passe: user123)
+INSERT INTO users (id, first_name, last_name, email, password, role)
+VALUES (
+    USER_SEQ.NEXTVAL,
+    'User',
+    'LivreMoi',
+    'user@livremoi.com',
+    '$2a$10$SVbPGsH5LJ1wSe7Qym3xteSIctYcF3urPcrmbxuT5mORJ3Za9pGIO',
+    'USER'
+);
+
 COMMIT;
