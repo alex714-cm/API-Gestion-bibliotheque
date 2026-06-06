@@ -23,7 +23,7 @@ frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
-# Backend (Java / Maven / Spring Boot)
+# Backend (Java / Maven / Spring Boot/)
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/*.class
