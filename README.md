@@ -1,5 +1,7 @@
 #  LivreMoi - Application de Gestion de Bibliothèque Modernisée
 
+**Projet réalisé par l'étudiant : Alae Sassi**
+
 **LivreMoi** est une application web moderne de gestion de bibliothèque construite avec une architecture découplée : un backend robuste en **Spring Boot (Java)** et un frontend dynamique et interactif en **React (Vite)** avec un design soigné, fluide et responsive.
 
 ---
