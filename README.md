@@ -51,9 +51,9 @@ Avant de commencer, assurez-vous d'avoir installé les outils suivants :
 ### 1. Configuration de la Base de Données (Oracle)
 
 1. Connectez-vous à votre instance de base de données Oracle.
-2. Créez un utilisateur ou schéma nommé `library` avec le mot de passe `sys` (ou modifiez les identifiants dans le fichier de configuration backend) :
+2. Créez un utilisateur ou schéma nommé `libr` avec le mot de passe `DB_PASSWORD:` (ou modifiez les identifiants dans le fichier de configuration backend) :
    ```sql
-   CREATE USER library IDENTIFIED BY sys;
+   CREATE USER libr IDENTIFIED BY $DB_PASSWORD:;
    GRANT CONNECT, RESOURCE, DBA TO library;
    ```
 
@@ -68,8 +68,8 @@ Avant de commencer, assurez-vous d'avoir installé les outils suivants :
 2. Configurez les accès à votre base de données dans le fichier `backend/src/main/resources/application.properties` (si nécessaire) :
    ```properties
    spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
-   spring.datasource.username=library
-   spring.datasource.password=sys
+   spring.datasource.username=libr
+   spring.datasource.password=${DB_PASSWORD:}
    ```
 3. Compilez et démarrez l'application à l'aide du wrapper Maven inclus :
    - **Sur Windows (PowerShell / CMD) :**
