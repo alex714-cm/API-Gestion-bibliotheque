@@ -44,7 +44,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: library-frontend
+    container_name: name-frontend
     ports:
       - "80:80"
     depends_on:
