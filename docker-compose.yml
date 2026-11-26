@@ -4,7 +4,7 @@ services:
   # Database Service: Oracle XE 21c (Lightweight developer version)
   database:
     image: gvenzl/oracle-xe:21-slim-faststart
-    container_name: libr-database
+    container_name: name-database
     ports:
       - "1522:1521"
     environment:
