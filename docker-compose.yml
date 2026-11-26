@@ -4,13 +4,13 @@ services:
   # Database Service: Oracle XE 21c (Lightweight developer version)
   database:
     image: gvenzl/oracle-xe:21-slim-faststart
-    container_name: library-database
+    container_name: libr-database
     ports:
       - "1522:1521"
     environment:
-      - ORACLE_PASSWORD=sys
-      - APP_USER=library
-      - APP_USER_PASSWORD=sys
+      - ORACLE_PASSWORD=${DB_PASSWORD:}
+      - APP_USER=USERNAME
+      - APP_USER_PASSWORD=${DB_PASSWORD:}
     volumes:
       - oracle-data:/opt/oracle/oradata
     healthcheck:
@@ -31,8 +31,8 @@ services:
       - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@database:1521/XEPDB1
-      - SPRING_DATASOURCE_USERNAME=library
-      - SPRING_DATASOURCE_PASSWORD=sys
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       database:
